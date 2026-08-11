@@ -31,16 +31,20 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 
-html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
 
 body{
   font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
   color:var(--ink);
   background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 60%,#ffffff 100%);
   background-attachment:fixed;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  /* grid вместо flex: короткий экран центрируется, длинный — спокойно прокручивается,
+     и верх страницы всегда остаётся доступным */
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  overflow-x:hidden;
   padding:28px 18px 48px;
   line-height:1.55;
   -webkit-font-smoothing:antialiased;
@@ -154,7 +158,8 @@ p + p{margin-top:14px}
    ============================================================ */
 .start-meta{
   display:flex;
-  gap:22px;
+  flex-wrap:wrap;
+  gap:14px 22px;
   margin-top:22px;
   padding-top:20px;
   border-top:1px dashed var(--line);
@@ -353,6 +358,7 @@ p + p{margin-top:14px}
   display:block;
   width:100%;
   max-height:64vh;
+  max-height:64dvh;
   margin:12px 0 0;
   border-radius:14px;
   background:#0b2b4a;
@@ -386,16 +392,42 @@ p + p{margin-top:14px}
 /* ============================================================
    8. АДАПТИВ И ДОСТУПНОСТЬ
    ============================================================ */
-@media (max-width:520px){
-  .card{padding:26px 20px}
-  .result-top,.result-body{padding-left:20px;padding-right:20px}
+
+/* планшеты и большие телефоны */
+@media (max-width:640px){
+  body{padding:16px 12px 36px}
+  .card{padding:24px 18px}
+  .result-top{padding:24px 18px 22px}
+  .result-body{padding:22px 18px 26px}
   .option{padding:14px 15px;font-size:15px}
+  .reel{padding:14px}
   .q-footer{flex-direction:column-reverse;align-items:stretch}
   #finishBtn{width:100%}
+  .btn{padding:16px 20px;font-size:15.5px}
+}
+
+/* узкие телефоны */
+@media (max-width:380px){
+  body{padding:12px 10px 32px}
+  .card{padding:20px 14px}
+  .result-top{padding:20px 14px 18px}
+  .result-body{padding:18px 14px 22px}
+  .option{font-size:14.5px;gap:11px;padding:13px 13px}
+  .option .dot{width:18px;height:18px}
+  .reel{padding:12px}
+  .score{flex-direction:column;align-items:flex-start;gap:10px}
+  .score-bar{width:100%}
+  .start-meta{gap:12px 16px}
+}
+
+/* большие экраны — карточка чуть шире и просторнее */
+@media (min-width:900px){
+  .app{max-width:660px}
 }
 
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
 }
 </style>
 </head>
@@ -457,7 +489,7 @@ p + p{margin-top:14px}
     <div class="result-body">
       <div id="resText"></div>
 
-      <!-- ВИДЕО: вся работа турагента изнутри. Ссылка задаётся в VIDEO_URL ниже -->
+      <!-- ВИДЕО: вся работа турагента изнутри. Адреса заданы в VIDEO_SOURCES ниже -->
       <figure class="reel">
         <span class="eyebrow">Посмотри, как выглядит эта работа</span>
         <video id="workVideo" controls playsinline preload="metadata"></video>
@@ -487,11 +519,12 @@ p + p{margin-top:14px}
 const LESSON_URL = 'https://euroline-tour.by/tdm?utm_source=reels&utm_medium=start';   // ← ссылка на бесплатный урок
 
 // Видео о том, как устроена работа турагента (показывается на экране результата).
-// f_auto,q_auto,w_1080 — Cloudinary сжимает файл «на лету» и отдаёт формат под браузер зрителя.
-const VIDEO_URL = 'https://res.cloudinary.com/agzurbat/video/upload/f_auto,q_auto,w_1080/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4';
-
-// Оригинал без сжатия — открывается по ссылке, если плеер почему-то не смог загрузить видео
-const VIDEO_FALLBACK_URL = 'https://res.cloudinary.com/agzurbat/video/upload/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4';
+// Первым грузится оригинал — он точно доступен. Если по какой-то причине не откроется,
+// плеер сам переключится на облегчённую копию, которую Cloudinary делает «на лету».
+const VIDEO_SOURCES = [
+  'https://res.cloudinary.com/agzurbat/video/upload/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4',
+  'https://res.cloudinary.com/agzurbat/video/upload/f_auto,q_auto,w_1080/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4'
+];
 const PASS_SCORE = 22;    // порог «отлично подходишь» (максимум 28)
 
 /* ============================================================
@@ -614,15 +647,22 @@ const finishBtn  = document.getElementById('finishBtn');
 document.getElementById('lessonBtn').setAttribute('href', LESSON_URL);
 
 const workVideo = document.getElementById('workVideo');
-workVideo.setAttribute('src', VIDEO_URL);
-document.getElementById('videoFallbackLink').setAttribute('href', VIDEO_FALLBACK_URL);
+document.getElementById('videoFallbackLink').setAttribute('href', VIDEO_SOURCES[0]);
 
-// Если браузер не смог загрузить файл (медленная сеть, блокировка внешних медиа
-// в предпросмотре и т.п.) — вместо чёрного плеера показываем ссылку на видео.
+// Пробуем источники по очереди. Ссылка вместо плеера появляется, только если
+// не открылся ни один из них.
+let videoSource = 0;
+workVideo.src = VIDEO_SOURCES[videoSource];
+
 workVideo.addEventListener('error', () => {
-  const fallback = document.getElementById('videoFallback');
-  fallback.hidden = false;
-  workVideo.style.display = 'none';
+  videoSource++;
+  if (videoSource < VIDEO_SOURCES.length){
+    workVideo.src = VIDEO_SOURCES[videoSource];
+    workVideo.load();
+  } else {
+    document.getElementById('videoFallback').hidden = false;
+    workVideo.style.display = 'none';
+  }
 });
 
 /* ============================================================
@@ -633,7 +673,9 @@ workVideo.addEventListener('error', () => {
 function showScreen(name){
   Object.values(screens).forEach(s => s.classList.remove('is-active'));
   screens[name].classList.add('is-active');
-  window.scrollTo({ top:0, behavior:'smooth' });
+  // мгновенно возвращаемся к началу страницы, иначе на длинном экране
+  // результата пользователь окажется в его середине
+  window.scrollTo(0, 0);
 }
 
 /** Обновляет линию маршрута и счётчик вопросов */
