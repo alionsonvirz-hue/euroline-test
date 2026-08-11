@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подходит ли тебе профессия турагента? — тест</title>
+
+<!-- Шрифты: Manrope — основной текст и заголовки, Unbounded — служебные надписи (как указатели в аэропорту) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   1. ТОКЕНЫ ДИЗАЙНА
+   ============================================================ */
+:root{
+  --sky-top:#e6f2fd;      /* небо сверху */
+  --sky-bottom:#f7fbff;   /* небо у горизонта */
+  --ink:#0b2b4a;          /* основной тёмно-синий текст */
+  --ink-muted:#5f7c99;    /* второстепенный текст */
+  --blue:#1e6fd9;         /* акцент — кнопки, активные состояния */
+  --blue-deep:#134da0;
+  --turq:#12b5c4;         /* бирюзовый акцент */
+  --sun:#ffb43d;          /* самолётик и «солнечные» детали */
+  --card:#ffffff;
+  --line:#dbe8f5;         /* границы */
+  --radius:22px;
+  --shadow:0 18px 50px -22px rgba(11,43,74,.35);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{height:100%}
+
+body{
+  font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 60%,#ffffff 100%);
+  background-attachment:fixed;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 18px 48px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Мягкое «солнце» на фоне — единственная декорация страницы */
+body::before{
+  content:"";
+  position:fixed;
+  top:-160px; right:-120px;
+  width:420px; height:420px;
+  background:radial-gradient(circle,rgba(255,180,61,.28) 0%,rgba(255,180,61,0) 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.app{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:620px;
+}
+
+/* ============================================================
+   2. ОБЩИЕ ЭЛЕМЕНТЫ
+   ============================================================ */
+.eyebrow{
+  font-family:'Unbounded',sans-serif;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--turq);
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:32px 30px;
+}
+
+h1{
+  font-size:clamp(26px,5.4vw,36px);
+  font-weight:800;
+  letter-spacing:-.02em;
+  line-height:1.15;
+  margin:12px 0 14px;
+}
+
+h2{
+  font-size:clamp(21px,4vw,26px);
+  font-weight:800;
+  letter-spacing:-.015em;
+  line-height:1.25;
+}
+
+p{color:var(--ink-muted);font-size:16px}
+p + p{margin-top:14px}
+
+/* Кнопки */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  padding:17px 24px;
+  border:0;
+  border-radius:14px;
+  font-family:inherit;
+  font-size:16px;
+  font-weight:800;
+  color:#fff;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-deep) 100%);
+  cursor:pointer;
+  text-decoration:none;
+  transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease;
+  box-shadow:0 12px 26px -12px rgba(30,111,217,.9);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 18px 32px -14px rgba(30,111,217,.95)}
+.btn:active{transform:translateY(0)}
+
+.btn-ghost{
+  background:none;
+  color:var(--ink-muted);
+  font-weight:600;
+  font-size:14px;
+  box-shadow:none;
+  padding:12px;
+  width:auto;
+}
+.btn-ghost:hover{color:var(--blue);transform:none;box-shadow:none}
+
+:focus-visible{outline:3px solid var(--turq);outline-offset:3px;border-radius:12px}
+
+/* ============================================================
+   3. ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+   ============================================================ */
+.screen{display:none}
+.screen.is-active{display:block;animation:screenIn .45s cubic-bezier(.22,.7,.3,1) both}
+
+@keyframes screenIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ============================================================
+   4. СТАРТОВЫЙ ЭКРАН
+   ============================================================ */
+.start-meta{
+  display:flex;
+  gap:22px;
+  margin-top:22px;
+  padding-top:20px;
+  border-top:1px dashed var(--line);
+  font-size:13px;
+  color:var(--ink-muted);
+}
+.start-meta b{
+  display:block;
+  font-family:'Unbounded',sans-serif;
+  font-size:15px;
+  font-weight:600;
+  color:var(--ink);
+}
+.start .btn{margin-top:24px}
+
+/* ============================================================
+   5. МАРШРУТ-ПРОГРЕСС (фирменный элемент: линия перелёта)
+   ============================================================ */
+.route{margin-bottom:26px}
+
+.route-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:14px;
+}
+.route-count{
+  font-family:'Unbounded',sans-serif;
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--ink-muted);
+}
+.route-count span{color:var(--ink)}
+
+.route-track{
+  position:relative;
+  height:22px;
+}
+/* пунктир — оставшийся путь */
+.route-track::before{
+  content:"";
+  position:absolute;
+  top:50%; left:0; right:0;
+  height:2px;
+  transform:translateY(-50%);
+  background-image:linear-gradient(90deg,var(--line) 0 8px,transparent 8px 16px);
+  background-size:16px 2px;
+}
+/* сплошная линия — пройденный путь */
+.route-done{
+  position:absolute;
+  top:50%; left:0;
+  height:2px;
+  transform:translateY(-50%);
+  background:linear-gradient(90deg,var(--turq),var(--blue));
+  border-radius:2px;
+  transition:width .5s cubic-bezier(.22,.7,.3,1);
+}
+/* самолёт на конце пройденного пути */
+.route-plane{
+  position:absolute;
+  top:50%;
+  transform:translate(-50%,-50%);
+  transition:left .5s cubic-bezier(.22,.7,.3,1);
+  color:var(--blue);
+  display:flex;
+}
+.route-plane svg{width:22px;height:22px;filter:drop-shadow(0 4px 6px rgba(30,111,217,.35))}
+
+/* ============================================================
+   6. ВОПРОС И ВАРИАНТЫ ОТВЕТА
+   ============================================================ */
+.question-text{
+  font-size:clamp(19px,3.6vw,23px);
+  font-weight:800;
+  letter-spacing:-.015em;
+  line-height:1.3;
+  margin:10px 0 22px;
+}
+
+.options{display:flex;flex-direction:column;gap:10px}
+
+.option{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  width:100%;
+  text-align:left;
+  padding:16px 18px;
+  background:#fbfdff;
+  border:1.5px solid var(--line);
+  border-radius:15px;
+  font-family:inherit;
+  font-size:15.5px;
+  font-weight:500;
+  color:var(--ink);
+  line-height:1.45;
+  cursor:pointer;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+.option:hover{border-color:var(--blue);background:#fff;transform:translateX(3px)}
+
+/* кружок-маркер слева */
+.option .dot{
+  flex:0 0 auto;
+  width:20px;height:20px;
+  margin-top:2px;
+  border:2px solid #c3d8ec;
+  border-radius:50%;
+  position:relative;
+  transition:border-color .18s ease,background .18s ease;
+}
+.option .dot::after{
+  content:"";
+  position:absolute;
+  inset:3px;
+  border-radius:50%;
+  background:#fff;
+  transform:scale(0);
+  transition:transform .2s cubic-bezier(.3,1.4,.5,1);
+}
+.option.is-picked{border-color:var(--blue);background:#eef5ff}
+.option.is-picked .dot{border-color:var(--blue);background:var(--blue)}
+.option.is-picked .dot::after{transform:scale(1)}
+
+.q-footer{
+  margin-top:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:46px;
+}
+#finishBtn{width:auto;padding:15px 28px;font-size:15px}
+#finishBtn[hidden]{display:none}
+
+/* анимация появления карточки вопроса */
+.q-body{animation:qIn .38s cubic-bezier(.22,.7,.3,1) both}
+@keyframes qIn{
+  from{opacity:0;transform:translateX(22px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* ============================================================
+   7. ЭКРАН РЕЗУЛЬТАТА
+   ============================================================ */
+.result-card{padding:0;overflow:hidden}
+
+.result-top{
+  padding:30px 30px 26px;
+  background:linear-gradient(135deg,#effaff 0%,#f6fbff 100%);
+  border-bottom:1px dashed var(--line);
+}
+
+.score{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:20px;
+}
+.score-value{
+  font-family:'Unbounded',sans-serif;
+  font-size:15px;
+  font-weight:600;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.score-bar{
+  flex:1;
+  height:8px;
+  background:#dbe8f5;
+  border-radius:8px;
+  overflow:hidden;
+}
+.score-fill{
+  height:100%;
+  width:0;
+  border-radius:8px;
+  background:linear-gradient(90deg,var(--turq),var(--blue));
+  transition:width .9s cubic-bezier(.22,.7,.3,1);
+}
+
+.result-body{padding:26px 30px 30px}
+
+/* блок с видео «как выглядит работа» */
+.reel{
+  margin:26px 0 0;
+  padding:18px;
+  background:linear-gradient(135deg,#f2f9ff 0%,#f7fdfe 100%);
+  border:1px solid var(--line);
+  border-radius:18px;
+}
+.reel video{
+  display:block;
+  width:100%;
+  max-height:64vh;
+  margin:12px 0 0;
+  border-radius:14px;
+  background:#0b2b4a;
+  box-shadow:0 14px 34px -18px rgba(11,43,74,.6);
+}
+.reel figcaption{
+  margin-top:14px;
+  font-size:14.5px;
+  color:var(--ink-muted);
+  line-height:1.5;
+}
+.video-fallback{
+  margin-top:14px;
+  font-size:14.5px;
+}
+.video-fallback a{color:var(--blue);font-weight:700;text-decoration:none}
+.video-fallback a:hover{text-decoration:underline}
+
+.lesson-lead{margin-top:22px}
+.result-body .btn{margin-top:16px}
+.result-restart{text-align:center;margin-top:6px}
+
+.signature{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px dashed var(--line);
+  font-size:13.5px;
+  color:var(--ink-muted);
+}
+
+/* ============================================================
+   8. АДАПТИВ И ДОСТУПНОСТЬ
+   ============================================================ */
+@media (max-width:520px){
+  .card{padding:26px 20px}
+  .result-top,.result-body{padding-left:20px;padding-right:20px}
+  .option{padding:14px 15px;font-size:15px}
+  .q-footer{flex-direction:column-reverse;align-items:stretch}
+  #finishBtn{width:100%}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+  <!-- ---------- ЭКРАН 1: СТАРТ ---------- -->
+  <section class="screen start is-active card" id="screenStart">
+    <span class="eyebrow">7 вопросов · 2 минуты</span>
+    <h1>Подходит ли тебе профессия турагента?</h1>
+    <p>Отвечай честно — здесь нет «правильных» ответов. Тест покажет, какие качества у тебя уже есть, а что придёт с опытом и обучением.</p>
+    <button class="btn" id="startBtn">Начать тест</button>
+    <div class="start-meta">
+      <div><b>7</b>вопросов</div>
+      <div><b>2 мин</b>на прохождение</div>
+      <div><b>Сразу</b>результат и разбор</div>
+    </div>
+  </section>
+
+  <!-- ---------- ЭКРАН 2: ВОПРОСЫ ---------- -->
+  <section class="screen card" id="screenQuiz">
+    <!-- маршрут-прогресс -->
+    <div class="route">
+      <div class="route-head">
+        <span class="eyebrow">Твой маршрут</span>
+        <span class="route-count">Вопрос <span id="qCurrent">1</span> из 7</span>
+      </div>
+      <div class="route-track">
+        <div class="route-done" id="routeDone"></div>
+        <div class="route-plane" id="routePlane">
+          <!-- иконка самолёта -->
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M21.6 11.1 14 9.3l-3.6-6.4c-.3-.6-1.2-.6-1.5 0L5.3 9.3l-2.9.7c-.7.2-.9 1-.4 1.5l2.4 2.2-.7 5.1c-.1.7.7 1.2 1.3.8l4.9-3 4.9 3c.6.4 1.4-.1 1.3-.8l-.5-3.6 5.9-2.2c.8-.3.8-1.5.1-1.9Z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- сюда JS вставляет вопрос и варианты -->
+    <div id="qBody"></div>
+
+    <div class="q-footer">
+      <button class="btn btn-ghost" id="backBtn" type="button">← Назад</button>
+      <button class="btn" id="finishBtn" type="button" hidden>Узнать результат</button>
+    </div>
+  </section>
+
+  <!-- ---------- ЭКРАН 3: РЕЗУЛЬТАТ ---------- -->
+  <section class="screen card result-card" id="screenResult">
+    <div class="result-top">
+      <span class="eyebrow" id="resEyebrow">Результат</span>
+      <h2 id="resTitle"></h2>
+      <div class="score">
+        <span class="score-value"><span id="resScore">0</span> из 28</span>
+        <div class="score-bar"><div class="score-fill" id="resFill"></div></div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div id="resText"></div>
+
+      <!-- ВИДЕО: вся работа турагента изнутри. Ссылка задаётся в VIDEO_URL ниже -->
+      <figure class="reel">
+        <span class="eyebrow">Посмотри, как выглядит эта работа</span>
+        <video id="workVideo" controls playsinline preload="metadata"></video>
+        <p class="video-fallback" id="videoFallback" hidden>
+          Видео не загрузилось в этом окне.
+          <a href="https://res.cloudinary.com/agzurbat/video/upload/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4" target="_blank" rel="noopener" id="videoFallbackLink">Открыть его в новой вкладке →</a>
+        </p>
+        <figcaption>Захожу в Битрикс, беру заявку, открываю поиск туров, подбираю вариант — и всё. Никаких сложных программ и лет обучения: вот она, вся профессия, за пару минут.</figcaption>
+      </figure>
+
+      <p class="lesson-lead">На бесплатном уроке я разбираю это подробно: откуда приходят клиенты, как считаются деньги и что делать в первый рабочий день.</p>
+      <!-- Кнопка на бесплатный урок. Адрес задаётся в LESSON_URL в скрипте ниже -->
+      <a class="btn" id="lessonBtn" href="#" target="_blank" rel="noopener">Смотреть бесплатный урок →</a>
+      <div class="result-restart">
+        <button class="btn btn-ghost" id="restartBtn" type="button">Пройти тест заново</button>
+      </div>
+      <p class="signature">Меня зовут Юля Борсук. Я практикующий турагент: у меня своё агентство и школа для тех, кто начинает с нуля.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   НАСТРОЙКИ
+   ============================================================ */
+const LESSON_URL = 'https://euroline-tour.by/tdm?utm_source=reels&utm_medium=start';   // ← ссылка на бесплатный урок
+
+// Видео о том, как устроена работа турагента (показывается на экране результата).
+// f_auto,q_auto,w_1080 — Cloudinary сжимает файл «на лету» и отдаёт формат под браузер зрителя.
+const VIDEO_URL = 'https://res.cloudinary.com/agzurbat/video/upload/f_auto,q_auto,w_1080/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4';
+
+// Оригинал без сжатия — открывается по ссылке, если плеер почему-то не смог загрузить видео
+const VIDEO_FALLBACK_URL = 'https://res.cloudinary.com/agzurbat/video/upload/v1786472934/%D0%92%D0%B8%D0%B4%D0%B5%D0%BE_%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6_t3flpo.mp4';
+const PASS_SCORE = 22;    // порог «отлично подходишь» (максимум 28)
+
+/* ============================================================
+   ВОПРОСЫ
+   Варианты идут в порядке 1 → 4 балла (снизу вверх по «моё/не моё»)
+   ============================================================ */
+const QUESTIONS = [
+  {
+    // 1. Общение по телефону с незнакомыми людьми
+    text: 'Пришла заявка от незнакомого человека. Нужно позвонить и за 10 минут выяснить всё про его отпуск: даты, бюджет, с кем едет, чего боится.',
+    options: [
+      { text: 'Буду оттягивать звонок до последнего — написать сообщение проще', score: 1 },
+      { text: 'Позвоню, но сначала прокручу в голове каждую фразу и всё равно буду волноваться', score: 2 },
+      { text: 'Немного соберусь с мыслями и наберу — обычно разговор идёт нормально', score: 3 },
+      { text: 'Наберу сразу: мне легко разговорить любого человека', score: 4 }
+    ]
+  },
+  {
+    // 2. Рутина: отзывы, подбор, сравнение
+    text: 'Чтобы собрать одну подборку, нужно открыть 30 отелей, прочитать десятки отзывов и сравнить их по пляжу, питанию и расстоянию до моря.',
+    options: [
+      { text: 'Звучит как пытка — проще отправить первое, что выдала система', score: 1 },
+      { text: 'Справлюсь, но быстро устану и начну торопиться', score: 2 },
+      { text: 'Нормально: включу музыку и спокойно пройду весь список', score: 3 },
+      { text: 'Мне это в удовольствие — копаться в деталях и находить вариант, который никто не заметил', score: 4 }
+    ]
+  },
+  {
+    // 3. Усидчивость и концентрация
+    text: 'Ты на середине подборки. Приходит уведомление, потом второе, потом рука тянется проверить ленту.',
+    options: [
+      { text: 'Через пять минут я уже в соцсетях, а подборка так и висит недоделанной', score: 1 },
+      { text: 'Отвлекаюсь часто и потом долго возвращаюсь в задачу', score: 2 },
+      { text: 'Отвлекусь на минуту, но быстро вернусь и доведу до конца', score: 3 },
+      { text: 'Убираю телефон и не встаю, пока подборка не будет готова', score: 4 }
+    ]
+  },
+  {
+    // 4. Активное слушание и выявление потребностей
+    text: 'Клиент говорит: «Хотим просто отдохнуть где-нибудь, где тепло и недорого». Твой первый шаг?',
+    options: [
+      { text: 'Скину пару горящих туров — пусть сам выбирает', score: 1 },
+      { text: 'Уточню бюджет и даты, а остальное разберём по ходу', score: 2 },
+      { text: 'Задам несколько вопросов: с кем едет, что было не так в прошлой поездке, что важно в отеле', score: 3 },
+      { text: 'Разговорю так, что клиент сам сформулирует, чего хочет — даже то, о чём не собирался говорить', score: 4 }
+    ]
+  },
+  {
+    // 5. Желание помогать и получать благодарность
+    text: 'Семья вернулась из поездки, которую ты собирал(а), и пишет: «Это был лучший отпуск в нашей жизни, спасибо!»',
+    options: [
+      { text: 'Приятно, но для меня важнее, что сделка закрыта и деньги получены', score: 1 },
+      { text: 'Приятно — и всё, дальше работаю по списку', score: 2 },
+      { text: 'Очень радуюсь: ради таких сообщений и хочется работать', score: 3 },
+      { text: 'Это лучшая часть работы — такие сообщения я перечитываю и сохраняю', score: 4 }
+    ]
+  },
+  {
+    // 6. Интерес к географии, странам, курортам
+    text: 'Как часто ты сам(а), без всякого повода, смотришь карты, читаешь про страны или залипаешь в чужие travel-сторис?',
+    options: [
+      { text: 'Практически никогда — меня это не особо цепляет', score: 1 },
+      { text: 'Изредка, если случайно попадётся на глаза', score: 2 },
+      { text: 'Регулярно — люблю узнавать про новые места и запоминаю их', score: 3 },
+      { text: 'Постоянно: могу с ходу сказать, где в феврале тепло, и часами изучать отели', score: 4 }
+    ]
+  },
+  {
+    // 7. Готовность учиться и адаптироваться
+    text: 'Туроператор без предупреждения обновил систему бронирования: другой интерфейс, новые правила, инструкции никто не прислал.',
+    options: [
+      { text: 'Меня это выбьет из колеи — буду тянуть до последнего', score: 1 },
+      { text: 'Понервничаю, но со временем разберусь, если кто-то поможет', score: 2 },
+      { text: 'Спокойно сяду и разберусь сам(а) — это часть работы', score: 3 },
+      { text: 'Люблю новое: залезу в систему первым и ещё коллегам объясню, что где нажимать', score: 4 }
+    ]
+  }
+];
+
+/* ============================================================
+   ТЕКСТЫ РЕЗУЛЬТАТОВ
+   ============================================================ */
+const RESULTS = {
+  high: {
+    eyebrow: 'Твой результат',
+    title: 'Профессия точно твоя',
+    html: `
+      <p>У тебя уже есть то, чему сложнее всего научить: ты не боишься разговаривать с людьми, умеешь слышать, что им на самом деле нужно, и доводишь дело до конца. Именно эти качества в туризме превращаются в деньги.</p>
+      <p>Клиент выбирает не самый дешёвый тур, а того агента, который его понял. Один такой клиент возвращается каждый год и приводит семью, друзей и коллег — так и собирается стабильный доход, а не разовые продажи.</p>
+      <p>Остальное — техника: где брать заявки, как работать с туроператорами, из чего складывается комиссия. Этому учатся за считанные недели, и откладывать тут нечего: сезон не ждёт, а первые деньги приходят уже с первых заявок.</p>`
+  },
+  base: {
+    eyebrow: 'Твой результат',
+    title: 'Отлично — этого уже достаточно, чтобы начать',
+    html: `
+      <p>У тебя есть главное: желание разобраться. Остальное — не черты характера, а обычные рабочие навыки, которые набираются прямо в процессе, как вождение или готовка.</p>
+      <p>Я начинала с нуля. Стеснялась звонить незнакомым людям, путала направления и по три раза перепроверяла бронирование, прежде чем нажать кнопку. Сейчас у меня своё агентство и сотни учеников, которые стартовали ровно оттуда же, где ты сейчас.</p>
+      <p>Уверенность в разговоре берётся не из смелости, а из знаний. Как только ты разберёшься в отелях, направлениях и сервисах, общение станет лёгким и даже приятным: тебе просто будет что сказать, и клиент это сразу почувствует.</p>
+      <p>А первое «спасибо, это был лучший отпуск в нашей жизни» ты получишь быстрее, чем думаешь. Именно ради таких сообщений в туризме и остаются.</p>`
+  }
+};
+
+/* ============================================================
+   СОСТОЯНИЕ И ЭЛЕМЕНТЫ
+   ============================================================ */
+let current = 0;                             // индекс текущего вопроса
+let answers = new Array(QUESTIONS.length).fill(null);  // выбранные баллы
+
+const screens   = { start:  document.getElementById('screenStart'),
+                    quiz:   document.getElementById('screenQuiz'),
+                    result: document.getElementById('screenResult') };
+
+const qBody      = document.getElementById('qBody');
+const qCurrent   = document.getElementById('qCurrent');
+const routeDone  = document.getElementById('routeDone');
+const routePlane = document.getElementById('routePlane');
+const backBtn    = document.getElementById('backBtn');
+const finishBtn  = document.getElementById('finishBtn');
+
+document.getElementById('lessonBtn').setAttribute('href', LESSON_URL);
+
+const workVideo = document.getElementById('workVideo');
+workVideo.setAttribute('src', VIDEO_URL);
+document.getElementById('videoFallbackLink').setAttribute('href', VIDEO_FALLBACK_URL);
+
+// Если браузер не смог загрузить файл (медленная сеть, блокировка внешних медиа
+// в предпросмотре и т.п.) — вместо чёрного плеера показываем ссылку на видео.
+workVideo.addEventListener('error', () => {
+  const fallback = document.getElementById('videoFallback');
+  fallback.hidden = false;
+  workVideo.style.display = 'none';
+});
+
+/* ============================================================
+   ФУНКЦИИ
+   ============================================================ */
+
+/** Показывает один из трёх экранов */
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove('is-active'));
+  screens[name].classList.add('is-active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/** Обновляет линию маршрута и счётчик вопросов */
+function updateRoute(){
+  const percent = (current / (QUESTIONS.length - 1)) * 100;
+  routeDone.style.width = percent + '%';
+  routePlane.style.left = percent + '%';
+  qCurrent.textContent  = current + 1;
+}
+
+/** Рисует текущий вопрос с вариантами ответов */
+function renderQuestion(){
+  const q = QUESTIONS[current];
+
+  qBody.innerHTML = `
+    <div class="q-body">
+      <p class="question-text">${q.text}</p>
+      <div class="options" role="group" aria-label="Варианты ответа"></div>
+    </div>`;
+
+  const box = qBody.querySelector('.options');
+
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${opt.text}</span>`;
+
+    // подсветить ранее выбранный вариант при возврате назад
+    if (answers[current] === opt.score) btn.classList.add('is-picked');
+
+    btn.addEventListener('click', () => pickAnswer(btn, opt.score));
+    box.appendChild(btn);
+  });
+
+  // кнопки навигации
+  backBtn.style.visibility = current === 0 ? 'hidden' : 'visible';
+  const isLast = current === QUESTIONS.length - 1;
+  finishBtn.hidden = !(isLast && answers[current] !== null);
+
+  updateRoute();
+}
+
+/** Обработка выбора ответа */
+function pickAnswer(btn, score){
+  // снять выделение с остальных вариантов
+  qBody.querySelectorAll('.option').forEach(o => o.classList.remove('is-picked'));
+  btn.classList.add('is-picked');
+  answers[current] = score;
+
+  const isLast = current === QUESTIONS.length - 1;
+
+  if (isLast){
+    // на последнем вопросе показываем кнопку «Узнать результат»
+    finishBtn.hidden = false;
+  } else {
+    // на остальных — небольшая пауза, чтобы увидеть выбор, и переход дальше
+    setTimeout(() => { current++; renderQuestion(); }, 320);
+  }
+}
+
+/** Подсчёт баллов и вывод результата */
+function showResult(){
+  const total = answers.reduce((sum, v) => sum + (v || 0), 0);
+  const data  = total >= PASS_SCORE ? RESULTS.high : RESULTS.base;
+
+  document.getElementById('resEyebrow').textContent = data.eyebrow;
+  document.getElementById('resTitle').textContent   = data.title;
+  document.getElementById('resText').innerHTML      = data.html;
+  document.getElementById('resScore').textContent   = total;
+
+  showScreen('result');
+
+  // шкала заполняется с небольшой задержкой — чтобы анимация была заметна
+  const fill = document.getElementById('resFill');
+  fill.style.width = '0%';
+  setTimeout(() => { fill.style.width = Math.round(total / 28 * 100) + '%'; }, 120);
+}
+
+/** Сброс теста */
+function restart(){
+  workVideo.pause();          // чтобы видео не играло на фоне после перезапуска
+  current = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  renderQuestion();
+  showScreen('quiz');
+}
+
+/* ============================================================
+   СОБЫТИЯ
+   ============================================================ */
+document.getElementById('startBtn').addEventListener('click', () => {
+  renderQuestion();
+  showScreen('quiz');
+});
+
+backBtn.addEventListener('click', () => {
+  if (current > 0){ current--; renderQuestion(); }
+});
+
+finishBtn.addEventListener('click', showResult);
+
+document.getElementById('restartBtn').addEventListener('click', restart);
+</script>
+</body>
+</html>
